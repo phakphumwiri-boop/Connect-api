@@ -3,4 +3,4 @@ uvicorn
 python-dotenv
 openai
 requests
-pydantic
+pydantic\ndocker>=7.1.0,<8.0.0\n
