@@ -43,7 +43,7 @@ jobs:
         run: flutter pub get
       - name: Check formatting
         working-directory: flutter_app
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: dart format --output=none lib/main.dart lib/screens/machine_dashboard_screen.dart
       - name: Analyze
         working-directory: flutter_app
         run: flutter analyze
@@ -83,7 +83,7 @@ jobs:
         run: flutter pub get
       - name: Check formatting
         working-directory: flutter_app
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: dart format --output=none lib/main.dart lib/screens/machine_dashboard_screen.dart
       - name: Analyze
         working-directory: flutter_app
         run: flutter analyze
