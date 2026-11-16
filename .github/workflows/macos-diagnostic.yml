@@ -1,0 +1,61 @@
+name: macOS Runner Diagnostic
+
+on:
+  push:
+    branches:
+      - diagnostic/macos-runner
+    paths:
+      - ".github/workflows/macos-diagnostic.yml"
+      - "flutter_app/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-diagnostic-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  macos-diagnostic:
+    name: macOS runner and Flutter build
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Inspect macOS runner
+        run: |
+          sw_vers
+          xcodebuild -version
+          uname -a
+          df -h
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Inspect Flutter toolchain
+        run: flutter doctor -v
+
+      - name: Generate macOS platform project
+        working-directory: flutter_app
+        run: flutter create --platforms=macos --project-name ish_app --org com.connectapi .
+
+      - name: Install dependencies
+        working-directory: flutter_app
+        run: flutter pub get
+
+      - name: Build macOS release
+        working-directory: flutter_app
+        run: flutter build macos --release
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ish-macos-diagnostic-release
+          path: flutter_app/build/macos/Build/Products/Release
+          if-no-files-found: error
+          retention-days: 7
