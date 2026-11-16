@@ -117,7 +117,8 @@ jobs:
   build_apple:
     name: Build Apple platforms
     needs: validate
-    runs-on: macos-latest
+    # Use the documented Intel macOS 15 image as an alternate hosted-runner pool.
+    runs-on: macos-15-intel
     timeout-minutes: 90
     steps:
       - name: Checkout source
