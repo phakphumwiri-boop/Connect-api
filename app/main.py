@@ -7,6 +7,7 @@ from app.routes.history import (
 from app.routes.github import (
     router as github
 )
+from app.routes.machines import router as machines
 
 app = FastAPI(
     title="ISH API",
@@ -15,7 +16,8 @@ app = FastAPI(
 
 app.include_router(chat)
 app.include_router(history)
-app.include_router(github)\napp.include_router(machines)
+app.include_router(github)
+app.include_router(machines)
 
 
 @app.get("/health")
