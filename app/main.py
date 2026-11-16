@@ -15,7 +15,7 @@ app = FastAPI(
 
 app.include_router(chat)
 app.include_router(history)
-app.include_router(github)
+app.include_router(github)\napp.include_router(machines)
 
 
 @app.get("/health")
