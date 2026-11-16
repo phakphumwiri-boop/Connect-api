@@ -7,6 +7,6 @@ void main() {
 
     expect(find.text('ISH Assistant'), findsOneWidget);
     expect(find.text('ส่งข้อความเพื่อเริ่มสนทนากับ ISH'), findsOneWidget);
-    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('พิมพ์ข้อความ...'), findsOneWidget);
   });
 }
