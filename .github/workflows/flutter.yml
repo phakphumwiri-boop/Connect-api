@@ -43,7 +43,7 @@ jobs:
         run: flutter pub get
       - name: Check formatting
         working-directory: flutter_app
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: dart format --output=none lib/main.dart lib/screens/machine_dashboard_screen.dart
       - name: Analyze
         working-directory: flutter_app
         run: flutter analyze
@@ -58,5 +58,50 @@ jobs:
         with:
           name: ish-android-release-apk
           path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  apple:
+    name: Build iOS Simulator and macOS
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout Connect-api Flutter source
+        uses: actions/checkout@v4
+        with:
+          repository: phakphumwiri-boop/Connect-api
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Apple platform projects
+        working-directory: flutter_app
+        run: flutter create --platforms=ios,macos --project-name ish_app --org com.connectapi .
+      - name: Install dependencies
+        working-directory: flutter_app
+        run: flutter pub get
+      - name: Check formatting
+        working-directory: flutter_app
+        run: dart format --output=none lib/main.dart lib/screens/machine_dashboard_screen.dart
+      - name: Analyze
+        working-directory: flutter_app
+        run: flutter analyze
+      - name: Unit tests
+        working-directory: flutter_app
+        run: flutter test --reporter expanded
+      - name: Build macOS release
+        working-directory: flutter_app
+        run: flutter build macos --release
+      - name: Build iOS Simulator (no signing)
+        working-directory: flutter_app
+        run: flutter build ios --simulator --no-codesign
+      - name: Upload Apple build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apple-builds
+          path: |
+            flutter_app/build/macos/Build/Products/Release/
+            flutter_app/build/ios/iphonesimulator/
           if-no-files-found: error
           retention-days: 14

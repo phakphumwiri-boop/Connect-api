@@ -4,3 +4,4 @@ python-dotenv
 openai
 requests
 pydantic
+docker>=7.1.0,<8.0.0
