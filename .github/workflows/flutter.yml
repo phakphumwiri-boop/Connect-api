@@ -113,11 +113,11 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  build_ios:
-    name: Build iOS
+  build_apple:
+    name: Build Apple platforms
     needs: validate
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -133,7 +133,7 @@ jobs:
       - name: Generate iOS platform project
         working-directory: flutter_app
         run: flutter create --platforms=ios --project-name ish_app --org com.connectapi .
-      - name: Install dependencies
+      - name: Install dependencies for iOS
         working-directory: flutter_app
         run: flutter pub get
       - name: Build unsigned iOS release
@@ -146,28 +146,10 @@ jobs:
           path: flutter_app/build/ios/iphoneos/Runner.app
           if-no-files-found: error
           retention-days: 14
-
-  build_macos:
-    name: Build macOS
-    needs: validate
-    runs-on: macos-latest
-    timeout-minutes: 45
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-      - name: Inspect Apple toolchain
-        run: |
-          sw_vers
-          xcodebuild -version
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
       - name: Generate macOS platform project
         working-directory: flutter_app
         run: flutter create --platforms=macos --project-name ish_app --org com.connectapi .
-      - name: Install dependencies
+      - name: Install dependencies for macOS
         working-directory: flutter_app
         run: flutter pub get
       - name: Build macOS release
