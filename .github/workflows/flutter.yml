@@ -1,4 +1,5 @@
 name: Flutter CI
+
 on:
   push:
     branches: [main]
@@ -7,59 +8,114 @@ on:
     branches: [main]
     paths: ["flutter_app/**", ".github/workflows/flutter.yml"]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 concurrency:
   group: flutter-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
-  build:
+  validate:
+    name: Validate Flutter source
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
-      - name: Checkout Connect-api Flutter source
+      - name: Checkout source
         uses: actions/checkout@v4
-        with:
-          repository: phakphumwiri-boop/Connect-api
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      - uses: subosito/flutter-action@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - name: Generate Android platform project
-        working-directory: flutter_app
-        run: flutter create --platforms=android --project-name ish_app --org com.connectapi .
-      - name: Enable local emulator HTTP for development
-        working-directory: flutter_app
-        shell: bash
-        run: |
-          python3 -c 'from pathlib import Path; p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text(); p.write_text(s.replace("<application", "<application android:usesCleartextTraffic=\"true\"", 1) if "android:usesCleartextTraffic" not in s else s)'
       - name: Install dependencies
         working-directory: flutter_app
         run: flutter pub get
-      - name: Apply Dart formatting
-        working-directory: flutter_app
-        run: dart format lib test
-      - name: Verify formatting
+      - name: Verify Dart formatting
         working-directory: flutter_app
         run: dart format --output=none --set-exit-if-changed lib test
       - name: Analyze
         working-directory: flutter_app
         run: flutter analyze
-      - name: Unit tests
+      - name: Unit and widget tests
         working-directory: flutter_app
         run: flutter test --reporter expanded
-      - name: Build release APK
+
+  build:
+    name: Build ${{ matrix.name }}
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Android
+            os: ubuntu-latest
+            platform: android
+            command: flutter build apk --release && flutter build appbundle --release
+            artifact: |
+              flutter_app/build/app/outputs/flutter-apk/app-release.apk
+              flutter_app/build/app/outputs/bundle/release/app-release.aab
+          - name: iOS
+            os: macos-latest
+            platform: ios
+            command: flutter build ios --release --no-codesign
+            artifact: flutter_app/build/ios/iphoneos/Runner.app
+          - name: Web
+            os: ubuntu-latest
+            platform: web
+            command: flutter build web --release
+            artifact: flutter_app/build/web
+          - name: Windows
+            os: windows-latest
+            platform: windows
+            command: flutter build windows --release
+            artifact: flutter_app/build/windows/x64/runner/Release
+          - name: macOS
+            os: macos-latest
+            platform: macos
+            command: flutter build macos --release
+            artifact: flutter_app/build/macos/Build/Products/Release
+          - name: Linux
+            os: ubuntu-latest
+            platform: linux
+            command: flutter build linux --release
+            artifact: flutter_app/build/linux/x64/release/bundle
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Setup Java for Android
+        if: matrix.platform == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install Linux desktop build dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate native platform project
         working-directory: flutter_app
-        run: flutter build apk --release
-      - name: Upload APK artifact
+        run: flutter create --platforms=${{ matrix.platform }} --project-name ish_app --org com.connectapi .
+      - name: Install dependencies
+        working-directory: flutter_app
+        run: flutter pub get
+      - name: Build release
+        working-directory: flutter_app
+        shell: bash
+        run: ${{ matrix.command }}
+      - name: Upload ${{ matrix.name }} artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ish-android-release-apk
-          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          name: ish-${{ matrix.platform }}-release
+          path: ${{ matrix.artifact }}
           if-no-files-found: error
           retention-days: 14
