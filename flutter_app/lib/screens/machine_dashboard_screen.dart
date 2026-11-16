@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:http/http.dart' as http;
 
 import 'chat_screen.dart';
@@ -94,7 +94,7 @@ class _MachineDashboardScreenState extends State<MachineDashboardScreen> {
               children: [
                 TextField(controller: name, decoration: const InputDecoration(labelText: 'ชื่อเครื่อง')),
                 DropdownButtonFormField<String>(
-                  value: mode,
+                  initialValue: mode,
                   decoration: const InputDecoration(labelText: 'Runtime'),
                   items: const [
                     DropdownMenuItem(value: 'web', child: Text('Web Workspace')),
