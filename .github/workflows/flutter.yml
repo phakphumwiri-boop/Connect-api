@@ -1,4 +1,5 @@
 name: Flutter CI
+# Retry trigger: keep this workflow easy to re-dispatch after a GitHub Actions queue stall.
 
 on:
   push:
