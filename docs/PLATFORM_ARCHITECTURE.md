@@ -59,3 +59,47 @@ Place the web build output, including `index.html`, in
 ## Current implementation boundary
 
 This first backend slice provisions and controls the three runtime containers. It does not yet implement source upload, Flutter build/test job execution, Android APK installation, live resource sampling, or the Flutter machine dashboard. Those are subsequent integration stages and must be covered by CI and live-host acceptance tests before the platform is described as production-ready.
+
+
+## Supported host operating systems
+
+### Windows 11
+
+- Install Docker Desktop and select the **WSL 2 backend** with Linux containers.
+- Enable WSL integration for the Ubuntu distribution used to run the FastAPI service.
+- Run FastAPI inside that integrated WSL 2 distribution so the Docker SDK can access the Docker Engine socket/context. Do not use Docker Desktop's Docker VMM backend for this Python Docker-SDK deployment unless a compatible Docker API endpoint is explicitly configured.
+- Web and Webtop containers run through Docker Desktop's Linux VM.
+- Android Emulator should run natively on Windows using the Android Emulator with **Windows Hypervisor Platform (WHPX)**. The current Docker Android runtime requires `/dev/kvm` and therefore intentionally does not claim Windows support. A future Windows host-agent integration will expose a managed native emulator session to the API.
+- Do not enable privileged containers to work around missing KVM.
+
+### Ubuntu/Linux
+
+- Install Docker Engine using Docker's official Ubuntu instructions, enable/start the Docker service, and grant the dedicated API service account least-privilege access to the Docker socket.
+- Web and Webtop run as ordinary managed containers.
+- Android container runtime requires x86_64 virtualization support, KVM enabled in firmware/kernel, and readable/writable `/dev/kvm`. The API checks for this device and refuses provisioning when it is absent.
+- If the host itself is a VM, nested virtualization must be exposed by its hypervisor.
+
+### Official setup references
+
+- Docker Desktop WSL 2 backend: https://docs.docker.com/desktop/features/wsl/
+- Docker Engine on Ubuntu: https://docs.docker.com/engine/install/ubuntu/
+- Android Emulator acceleration: https://developer.android.com/studio/run/emulator-acceleration
+- Android Emulator command-line acceleration modes: https://developer.android.com/studio/run/emulator-commandline
+
+## Host installation smoke checks
+
+Windows PowerShell:
+```powershell
+wsl --status
+docker version
+docker info
+```
+
+Ubuntu:
+```bash
+sudo systemctl is-active docker
+docker version
+test -r /dev/kvm && test -w /dev/kvm
+```
+
+These commands verify prerequisites only. A successful live acceptance also needs a create/start/stop/delete cycle against the actual host and a browser session test.
