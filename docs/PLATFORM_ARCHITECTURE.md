@@ -130,3 +130,20 @@ flutter build ios --simulator --no-codesign
 ```
 
 A successful compile is not equivalent to a booted simulator or a successful run on a physical iPhone.
+
+
+## Flutter Machine Dashboard
+
+The Flutter home screen provides the first API-backed machine control surface:
+- Configure the API base URL and enter the admin token at runtime. The token is held in app memory only and is not persisted.
+- List, create, start, stop, restart, and delete Docker-managed machines through the authenticated `/machines` endpoints.
+- Android Emulator defaults to `10.0.2.2` for the Android emulator host loopback. Web, iOS Simulator, macOS, Windows, and Linux default to `127.0.0.1` when the API runs on the same host.
+- For a physical iPhone/Android device, set `API_BASE_URL` to a reachable HTTPS API endpoint or enter the host's LAN URL. Do not expose the admin API directly to the public internet.
+
+Example:
+```bash
+cd flutter_app
+flutter run --dart-define=API_BASE_URL=http://192.168.1.20:8000
+```
+
+This is a machine CRUD/control dashboard, not yet a live desktop/phone screen viewer or a cross-host agent manager. The admin token should be supplied only over a trusted network; production deployment needs TLS and a stronger user/session authorization design.
