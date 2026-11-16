@@ -103,3 +103,30 @@ test -r /dev/kvm && test -w /dev/kvm
 ```
 
 These commands verify prerequisites only. A successful live acceptance also needs a create/start/stop/delete cycle against the actual host and a browser session test.
+
+
+### macOS
+
+- Install Docker Desktop for Mac and use its supported container runtime for Web and Linux Desktop/Webtop workloads. Containers execute in Docker Desktop's Linux VM, not as native macOS processes.
+- Run FastAPI on macOS with Docker Desktop's supported Docker context/socket and verify SDK connectivity with `docker version` before enabling machine management.
+- Build and run Flutter macOS desktop apps natively using the macOS Flutter toolchain and Xcode command-line tools.
+- Android Emulator runs natively on macOS using Apple's Hypervisor.framework acceleration (subject to Android Emulator and host architecture support). The current Docker Android mode still requires Linux `/dev/kvm`; it is not the macOS Android runtime.
+- Do not advertise native iOS Simulator or iOS device support from Docker containers.
+
+### iOS
+
+- iOS Simulator is provided by Xcode and must run on a macOS host. CI uses a macOS GitHub Actions runner to compile the iOS Simulator target without code signing.
+- Installing on a physical iPhone, signing an archive, and App Store/TestFlight distribution require the appropriate Apple developer signing assets and device/provisioning configuration. CI must not claim device installation merely because the simulator build succeeds.
+- The current Machine API does not yet orchestrate Xcode simulator boot, app installation, screenshots, or physical-device deployment; those require a macOS host agent and explicit acceptance tests.
+
+### Apple platform smoke checks
+
+On macOS with Xcode installed:
+```bash
+xcodebuild -version
+flutter doctor -v
+flutter build macos --release
+flutter build ios --simulator --no-codesign
+```
+
+A successful compile is not equivalent to a booted simulator or a successful run on a physical iPhone.
