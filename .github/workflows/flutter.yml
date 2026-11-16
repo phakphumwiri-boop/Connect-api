@@ -59,11 +59,6 @@ jobs:
             artifact: |
               flutter_app/build/app/outputs/flutter-apk/app-release.apk
               flutter_app/build/app/outputs/bundle/release/app-release.aab
-          - name: iOS
-            os: macos-latest
-            platform: ios
-            command: flutter build ios --release --no-codesign
-            artifact: flutter_app/build/ios/iphoneos/Runner.app
           - name: Web
             os: ubuntu-latest
             platform: web
@@ -74,11 +69,6 @@ jobs:
             platform: windows
             command: flutter build windows --release
             artifact: flutter_app/build/windows/x64/runner/Release
-          - name: macOS
-            os: macos-latest
-            platform: macos
-            command: flutter build macos --release
-            artifact: flutter_app/build/macos/Build/Products/Release
           - name: Linux
             os: ubuntu-latest
             platform: linux
@@ -120,5 +110,73 @@ jobs:
         with:
           name: ish-${{ matrix.platform }}-release
           path: ${{ matrix.artifact }}
+          if-no-files-found: error
+          retention-days: 14
+
+  build_ios:
+    name: Build iOS
+    needs: validate
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Inspect Apple toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate iOS platform project
+        working-directory: flutter_app
+        run: flutter create --platforms=ios --project-name ish_app --org com.connectapi .
+      - name: Install dependencies
+        working-directory: flutter_app
+        run: flutter pub get
+      - name: Build unsigned iOS release
+        working-directory: flutter_app
+        run: flutter build ios --release --no-codesign
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ish-ios-release
+          path: flutter_app/build/ios/iphoneos/Runner.app
+          if-no-files-found: error
+          retention-days: 14
+
+  build_macos:
+    name: Build macOS
+    needs: validate
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Inspect Apple toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate macOS platform project
+        working-directory: flutter_app
+        run: flutter create --platforms=macos --project-name ish_app --org com.connectapi .
+      - name: Install dependencies
+        working-directory: flutter_app
+        run: flutter pub get
+      - name: Build macOS release
+        working-directory: flutter_app
+        run: flutter build macos --release
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ish-macos-release
+          path: flutter_app/build/macos/Build/Products/Release
           if-no-files-found: error
           retention-days: 14
