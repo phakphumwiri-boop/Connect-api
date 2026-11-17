@@ -5,6 +5,7 @@ import '../services/ish_api.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
+
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
@@ -45,7 +46,11 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final reply = await _api.sendMessage(sessionId: _sessionId, message: text);
       if (!mounted) return;
-      setState(() => _messages.add(ChatMessage(role: MessageRole.assistant, content: reply)));
+      setState(
+        () => _messages.add(
+          ChatMessage(role: MessageRole.assistant, content: reply),
+        ),
+      );
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = error.toString());
@@ -78,7 +83,9 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
     }
   }
 
@@ -107,7 +114,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         final message = _messages[index];
                         final isUser = message.role == MessageRole.user;
                         return Align(
-                          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                          alignment:
+                              isUser ? Alignment.centerRight : Alignment.centerLeft,
                           child: Container(
                             constraints: const BoxConstraints(maxWidth: 320),
                             margin: const EdgeInsets.only(bottom: 12),
@@ -115,7 +123,9 @@ class _ChatScreenState extends State<ChatScreen> {
                             decoration: BoxDecoration(
                               color: isUser
                                   ? Theme.of(context).colorScheme.primaryContainer
-                                  : Theme.of(context).colorScheme.surfaceContainerHighest,
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(message.content),
@@ -128,7 +138,10 @@ class _ChatScreenState extends State<ChatScreen> {
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ),
             SafeArea(
               child: Padding(
