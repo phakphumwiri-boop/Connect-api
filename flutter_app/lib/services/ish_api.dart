@@ -19,7 +19,9 @@ class IshApi {
   Uri _uri(String path) => Uri.parse('$baseUrl$path');
 
   Future<bool> checkHealth() async {
-    final response = await _client.get(_uri('/health')).timeout(const Duration(seconds: 10));
+    final response = await _client
+        .get(_uri('/health'))
+        .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {
       throw IshApiException('Backend health check failed (${response.statusCode}).');
     }
@@ -27,12 +29,17 @@ class IshApi {
     return body['status'] == 'ok';
   }
 
-  Future<String> sendMessage({required String sessionId, required String message}) async {
-    final response = await _client.post(
-      _uri('/chat'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'session_id': sessionId, 'message': message}),
-    ).timeout(const Duration(seconds: 60));
+  Future<String> sendMessage({
+    required String sessionId,
+    required String message,
+  }) async {
+    final response = await _client
+        .post(
+          _uri('/chat'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'session_id': sessionId, 'message': message}),
+        )
+        .timeout(const Duration(seconds: 60));
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw IshApiException('Chat request failed (${response.statusCode}).');
     }
@@ -61,6 +68,7 @@ class IshApi {
 class IshApiException implements Exception {
   const IshApiException(this.message);
   final String message;
+
   @override
   String toString() => message;
 }
