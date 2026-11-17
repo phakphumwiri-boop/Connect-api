@@ -1,4 +1,5 @@
 name: Flutter CI
+
 on:
   push:
     branches: [main]
@@ -7,37 +8,50 @@ on:
     branches: [main]
     paths: ["flutter_app/**", ".github/workflows/flutter.yml"]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 concurrency:
   group: flutter-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  FLUTTER_CHANNEL: stable
+
 jobs:
-  build:
+  android:
+    name: Android • analyze, test and APK
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
-      - name: Checkout Connect-api Flutter source
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          repository: phakphumwiri-boop/Connect-api
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: actions/setup-java@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
       - name: Generate Android platform project
         working-directory: flutter_app
         run: flutter create --platforms=android --project-name ish_app --org com.connectapi .
-      - name: Enable local emulator HTTP for development
+      - name: Allow cleartext only for local Android development
         working-directory: flutter_app
         shell: bash
         run: |
-          python3 -c 'from pathlib import Path; p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text(); p.write_text(s.replace("<application", "<application android:usesCleartextTraffic=\"true\"", 1) if "android:usesCleartextTraffic" not in s else s)'
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          if "android:usesCleartextTraffic" not in s:
+              s = s.replace("<application", '<application android:usesCleartextTraffic="true"', 1)
+              p.write_text(s)
+          PY
       - name: Install dependencies
         working-directory: flutter_app
         run: flutter pub get
@@ -47,16 +61,54 @@ jobs:
       - name: Analyze
         working-directory: flutter_app
         run: flutter analyze
-      - name: Unit tests
+      - name: Unit and widget tests
         working-directory: flutter_app
         run: flutter test --reporter expanded
       - name: Build release APK
         working-directory: flutter_app
         run: flutter build apk --release
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ish-android-release-apk
           path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  ios:
+    name: iOS • analyze, test and unsigned build
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+      - name: Generate iOS platform project
+        working-directory: flutter_app
+        run: flutter create --platforms=ios --project-name ish_app --org com.connectapi .
+      - name: Install dependencies
+        working-directory: flutter_app
+        run: flutter pub get
+      - name: Check formatting
+        working-directory: flutter_app
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Analyze
+        working-directory: flutter_app
+        run: flutter analyze
+      - name: Unit and widget tests
+        working-directory: flutter_app
+        run: flutter test --reporter expanded
+      - name: Build iOS without code signing
+        working-directory: flutter_app
+        run: flutter build ios --release --no-codesign
+      - name: Upload unsigned iOS app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ish-ios-unsigned-app
+          path: flutter_app/build/ios/iphoneos/Runner.app
           if-no-files-found: error
           retention-days: 14
