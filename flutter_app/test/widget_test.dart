@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../lib/main.dart';
+import 'package:ish_app/main.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets('ISH app displays the chat screen', (tester) async {
