@@ -8,6 +8,7 @@ void main() {
       expect(message.role, MessageRole.user);
       expect(message.content, 'Hello');
     });
+
     test('unknown roles default to assistant and round-trip', () {
       final message = ChatMessage.fromJson({'role': 'system', 'content': 'Ready'});
       expect(message.role, MessageRole.assistant);
