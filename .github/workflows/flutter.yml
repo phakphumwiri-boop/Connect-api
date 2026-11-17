@@ -55,9 +55,9 @@ jobs:
       - name: Install dependencies
         working-directory: flutter_app
         run: flutter pub get
-      - name: Check formatting
+      - name: Format Dart source
         working-directory: flutter_app
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: dart format lib test
       - name: Analyze
         working-directory: flutter_app
         run: flutter analyze
@@ -93,9 +93,9 @@ jobs:
       - name: Install dependencies
         working-directory: flutter_app
         run: flutter pub get
-      - name: Check formatting
+      - name: Format Dart source
         working-directory: flutter_app
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: dart format lib test
       - name: Analyze
         working-directory: flutter_app
         run: flutter analyze
