@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'screens/chat_screen.dart';
 
 void main() => runApp(const IshApp());
 
 class IshApp extends StatelessWidget {
   const IshApp({super.key});
+
   @override
   Widget build(BuildContext context) => MaterialApp(
         title: 'ISH Assistant',
